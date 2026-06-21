@@ -1,29 +1,114 @@
 from fastapi import FastAPI, HTTPException
-from modelos.clientes import Cliente,ClienteCrear
-
+from modelos.clientes import Cliente,ClienteCrear , ClienteEditar
+from modelos.facturas import Factura,FacturaCrear,FacturaEditar
+from modelos.transacciones import Transaccion,TransaccionCrear,TransaccionEditar
 
 app = FastAPI ()
 
 
 lista_clientes:list[Cliente] = []
+lista_facturas: list[Factura] = []
+lista_trasscciones: list[Transaccion] =[]
 
 
 #enpoint para  obtener o listar todos los clientes
 @app.get("/clientes", response_model=list[Cliente])
-def listar_clientes():
+async def listar_clientes():
     return lista_clientes
 
 #enpoint para  obtener o listar un solo  cliente de la lista
-@app.get("/clientes/(cliente_id)", response_model=Cliente)
-def listar_cliente(cliente_id: int):
+@app.get("/clientes/{cliente_id)", response_model=Cliente)
+async def listar_cliente(cliente_id: int):
  #recorrer lista de clientes
     for i, obj_cliente in enumerate(lista_clientes):
-        if obj_cliente.get("id") == cliente_id:
+        if obj_cliente.id == cliente_id:
             return obj_cliente
+    raise HTTPException(
+          status_code=440, detail=f"El cliete con id {cliente_id}, no existe."
+    )
         
 #enpoint crear un cliente y agregar a la lista 
 @app.post("/clientes", response_model=Cliente)
-def crear_cliente(datos_cliente: ClienteCrear):
+async def crear_cliente(datos_cliente: ClienteCrear):
     cliente_val = Cliente.model_validate(datos_cliente.model_dump())
+    #generar id
+    id_cliente = len(lista_clientes)+1
+    cliente_val .id = id_cliente
     lista_clientes.append(cliente_val)
     return cliente_val
+
+
+#endpoint para editar un cliente y agregar a la lista
+@app.patch("/clientes/{cliente_id}", response_model=Cliente)
+async def editar_cliente(cliente_id: int, datos_cliente: ClienteEditar):
+    for i, obj_cliente in enumerate(lista_clientes):
+        if  obj_cliente.id == cliente_id:
+        #validar cliente
+                        cliente_val = Cliente.model_validate(datos_cliente.model_dump())
+                        cliente_val.id = cliente_id
+                        lista_clientes[i] = cliente_val
+                        return cliente_val
+    raise HTTPException(
+          status_code=400, detail=f"El cliente con id {cliente_id}. no existe.")
+
+#enpoint Eliminar Cliente 
+@app.delete("/clientes/{cliente_id}", response_model=Cliente)
+async def eliminar_cliente(cliente_id: int):
+    for i, obj_cliente in enumerate(lista_clientes):
+        if  obj_cliente.id == cliente_id:
+                        cliente_eliminado = lista_clientes.pop(i)
+                        return cliente_eliminado
+    raise HTTPException(status_code=400, detail=f"El cliente con id {cliente_id}. no existe.")
+
+#enpoints para facturas
+
+@app.get("/facturas", response_model=list[Factura])
+async def listar_facturas():
+      return lista_facturas
+
+@app.get("/facturas/{id_factura}", response_model=Factura)
+async def listar_factura(factura_id: int):
+       #recorrer lista de Facturas
+    for i, obj_factura in enumerate(lista_facturas):
+        if obj_factura.id == factura_id:
+            return obj_factura
+        raise HTTPException(
+              status_code=400,detail=f"La factura con id {factura_id}, no existe. ")
+
+@app.post("/facturas/{id_factura}", response_model=Factura)
+async def crear_factura(id_factura: int, datos_factura: Factura):
+      pass
+
+@app.patch("/facturas/{id_factura}",response_model=Factura)
+async def editar_factura(id_factura: int, datos_factura: Factura):
+      pass
+
+@app.delete("/facturas/{id_factura}",response_model=Factura)
+async def eliminar_factura(id_factura: int):
+      pass
+
+#enpoints transacciones
+
+@app.get("/transacciones", response_model=list[Transaccion])
+async def listar_transacciones():
+      pass
+
+
+@app.get("/transacciones/{id_transaccion}", response_model=Transaccion)
+async def listar_transaccion(id_transaccion:int):
+      pass
+
+
+@app.post("/transacciones/{id_transaccion}", response_model=Transaccion)
+async def crear_transacciones(id_factura: int, datos_transaccion: Transaccion):
+      pass
+
+
+@app.patch("/transacciones/{id_transaccion}", response_model=Transaccion)
+async def editar_transacciones(id_transaccion: int, datos_transaccion: Transaccion):
+      pass
+
+
+@app.delete("/transacciones/{id_transaccion}", response_model=Transaccion)
+async def eliminar_transacciones(id_transaccion:int):
+      pass
